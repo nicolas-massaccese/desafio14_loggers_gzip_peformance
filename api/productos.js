@@ -1,5 +1,6 @@
 const Router = require('express');
 const { MongoClient, ServerApiVersion } = require('mongodb');
+const { logger } = require('../loggerConf.js');
 
 const { urlAtlas, database } = require('../config.js');
 
@@ -21,6 +22,7 @@ productosApiRouter.get('/api/productos', async (req, res) => {
     const client = connectAtlas();
     const databaseAtlas = client.db(database);
     const collectionProductos = databaseAtlas.collection("productos");
+    const {url, method} = req;
 
     let productos=[];
     try {
@@ -32,12 +34,15 @@ productosApiRouter.get('/api/productos', async (req, res) => {
 
         if ((await cursorAtlas.countDocuments) === 0) {
             productos.push( {error: "NO EXISTEN PRODUCTOS EN LA BASE"} );
+            logger.error(`En la Ruta ${method} ${url} NO EXISTEN PRODUCTOS EN LA BASE`);
         } else {
             await cursorAtlas.forEach(element => productos.push(element));
         }
     } finally {
         await client.close();
     }
+
+    logger.info(`Ruta ${method} ${url} implementadas`);
     res.send(productos);
 });
 
@@ -48,6 +53,8 @@ productosApiRouter.get('/api/productos/:prodName', async (req, res) => {
     const client = connectAtlas();
     const databaseAtlas = client.db(database);
     const collectionProductos = databaseAtlas.collection("productos");
+    const {url, method} = req;
+
 
     let producto=[];
     try {
@@ -55,24 +62,37 @@ productosApiRouter.get('/api/productos/:prodName', async (req, res) => {
         const result = await collectionProductos.findOne(query);
         if(result == null){
             producto.push( { error: `NO EXISTE ${prodName} EN LA BASE` } );
+            logger.error(`En la Ruta ${method} ${url} NO EXISTE ${prodName} EN LA BASE`);
+
         } else {
             producto.push(result);
         }
     } finally {
         await client.close();
     }
+
+    logger.info(`Ruta ${method} ${url} implementadas`);
     res.send(producto);
 });
 
 productosApiRouter.post('/api/productos', async (req, res) => {
+    const {url, method} = req;
+
+    logger.info(`Ruta ${method} ${url} implementadas`);
     res.send("ALTA de Producto");
 });
 
 productosApiRouter.post('/api/productos/:id', (req, res) => {
+    const {url, method} = req;
+
+    logger.info(`Ruta ${method} ${url} implementadas`);
     res.send("ACTUALIZACION de Producto");
 });
 
 productosApiRouter.delete('/api/productos/:id', (req, res) => {
+    const {url, method} = req;
+
+    logger.info(`Ruta ${method} ${url} implementadas`);
     res.send("ELIMINACION de Producto");
 });
 
@@ -81,6 +101,7 @@ async function getProductos(){
     const client = connectAtlas();
     const databaseAtlas = client.db(database);
     const collectionProductos = databaseAtlas.collection("productos");
+
 
     let productos=[];
     try {
@@ -92,6 +113,7 @@ async function getProductos(){
 
         if ((await cursorAtlas.countDocuments) === 0) {
             productos.push( {error: "NO EXISTEN PRODUCTOS EN LA BASE"} );
+            logger.error("NO EXISTEN PRODUCTOS EN LA BASE");
         } else {
             await cursorAtlas.forEach(element => productos.push(element));
         }

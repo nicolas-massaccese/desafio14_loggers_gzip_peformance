@@ -1,4 +1,5 @@
 const express = require('express');
+const compression = require('compression');
 const { createServer } = require('http');
 const socketIo = require('socket.io');
 const expressSession = require('express-session');
@@ -16,6 +17,7 @@ const { mainPage } = require('./pages/loadPages.js');
 const path = require ('path');
 
 const { config, a, b, c, d } = require('./enviroment.js');
+const { logger } = require('./loggerConf.js');
 const { ID, NODEV, FILE, PTH, MEM } = require('./config.js');
 
 
@@ -94,8 +96,8 @@ if (config.m == 'CLUSTER' && cluster.isPrimary) {
         });
     });
 
-
-        app.get('/info', async (req, res) => {
+    
+        app.get('/info', compression(), async (req, res) => {
         
             res.send(`       
                     <p> <b>número de procesadores presentes en el servidor.:</b> ${numCpus}  </p>
@@ -107,20 +109,25 @@ if (config.m == 'CLUSTER' && cluster.isPrimary) {
                     <p> <b>Process id:</b> ${ID}</p>
                     <p> <b>Carpeta del proyecto:</b> ${FILE}</p>
                 `)
-            });
+        });
 
-            app.get('/prueba', (_, res) => {
-                res.send(`Servidor en puerto ${config.p}, proceso ${process.pid}, ${new Date().toISOString()}`);
-            });
+        app.get('/prueba', (_, res) => {
+            res.send(`Servidor en puerto ${config.p}, proceso ${process.pid}, ${new Date().toISOString()}`);
+        });
+
+        app.get('*', (req, res) => {
+            const {url, method} = req
+            logger.warn(`Ruta ${method} ${url} inexistentes`);
+            res.send(`Ruta ${method} ${url} inexistentes`);
+        });
             
 
-            server.listen(config.p, () => {
-                console.log(`Servidor http WebSocket escuchando en el puerto ${server.address().port}, proceso ${ID}, ${new Date().toISOString()}`);
-            });
-            server.on("error", error => console.log(`Error en servidor ${error}`));
-            
+        server.listen(config.p, () => {
+            console.log(`Servidor http WebSocket escuchando en el puerto ${server.address().port}, proceso ${ID}, ${new Date().toISOString()}`);
+        });
+        server.on("error", error => logger.error(`Error en servidor ${error}`));
+
 }
-
 
 
 

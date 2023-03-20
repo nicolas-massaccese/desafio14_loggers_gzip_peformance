@@ -1,5 +1,7 @@
 const Router = require('express');
 const { MongoClient, ServerApiVersion } = require('mongodb');
+const { logger } = require('../loggerConf.js');
+
 
 const { urlAtlas, database } = require('../config.js');
 
@@ -21,6 +23,8 @@ mensajesApiRouter.get('/api/mensajes', async (req, res) => {
     const client = connectAtlas();
     const databaseAtlas = client.db(database);
     const collectionMensajes = databaseAtlas.collection("mensajes");
+    const {url, method} = req;
+
 
     let mensajes=[];
     try {
@@ -28,12 +32,15 @@ mensajesApiRouter.get('/api/mensajes', async (req, res) => {
 
         if ((await cursorAtlas.countDocuments) === 0) {
             mensajes.push( {error: "NO EXISTEN MENSAJES EN LA BASE"} );
+            logger.error(`En la Ruta ${method} ${url} NO EXISTEN MENSAJES EN LA BASE`);
         } else {
             await cursorAtlas.forEach(element => mensajes.push(element));
         }
     } finally {
         await client.close();
     }
+
+    logger.info(`Ruta ${method} ${url} implementadas`);
     res.send(mensajes);
 });
 
@@ -43,6 +50,8 @@ mensajesApiRouter.get('/api/mensajes/:msgAutor', async (req, res) => {
     const client = connectAtlas();
     const databaseAtlas = client.db(database);
     const collectionMensajes = databaseAtlas.collection("mensajes");
+    const {url, method} = req;
+
 
     let mensaje=[];
     try {
@@ -50,24 +59,37 @@ mensajesApiRouter.get('/api/mensajes/:msgAutor', async (req, res) => {
         const result = await collectionMensajes.findOne(query);
         if(result == null){
             mensaje.push( { error: `NO EXISTE ${msgAutor} EN LA BASE` } );
+            logger.error(`En la Ruta ${method} ${url} NO EXISTE ${msgAutor} EN LA BASE`);
+
         } else {
             mensaje.push(result);
         }
     } finally {
         await client.close();
     }
+
+    logger.info(`Ruta ${method} ${url} implementadas`);
     res.send(mensaje);
 });
 
 mensajesApiRouter.post('/api/mensajes', (req, res) => {
+    const {url, method} = req;
+
+    logger.info(`Ruta ${method} ${url} implementadas`);
     res.send("ALTA de Mensaje");
 });
 
 mensajesApiRouter.post('/api/mensajes/:id', (req, res) => {
+    const {url, method} = req;
+
+    logger.info(`Ruta ${method} ${url} implementadas`);
     res.send("ACTUALIZACION de Mensaje");
 });
 
 mensajesApiRouter.delete('/api/mensajes/:id', (req, res) => {
+    const {url, method} = req;
+
+    logger.info(`Ruta ${method} ${url} implementadas`);
     res.send("ELIMINACION de Mensaje");
 });
 
@@ -76,6 +98,7 @@ async function getMensajes(){
     const client = connectAtlas();
     const databaseAtlas = client.db(database);
     const collectionProductos = databaseAtlas.collection("mensajes");
+
 
     let mensajes=[];
     try {
@@ -86,6 +109,7 @@ async function getMensajes(){
 
         if ((await cursorAtlas.countDocuments) === 0) {
             productos.push( {error: "NO EXISTEN MENSAJES EN LA BASE"} );
+            logger.error("NO EXISTEN MENSAJES EN LA BASE");
         } else {
             await cursorAtlas.forEach(element => mensajes.push(element));
         }
